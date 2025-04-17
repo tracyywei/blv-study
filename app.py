@@ -13,8 +13,8 @@ def load_data():
 
 data = load_data()
 
-random.seed(time.time())
-data_shuffled = data.sample(frac=1).reset_index(drop=True)  # Shuffle the selected 6 images
+# Use the dataset directly without shuffling
+data_ordered = data.reset_index(drop=True)  # Ensure the dataset is in its original order
 
 if "current_step" not in st.session_state:
     st.session_state.current_step = 0  # Tracks whether the user is viewing the image/context or rating alt texts
@@ -23,13 +23,13 @@ if "progress" not in st.session_state:
 if "alt_text_index" not in st.session_state:
     st.session_state.alt_text_index = 0  # Tracks which alt text is being rated
 
-total_images = len(data_shuffled)
+total_images = len(data_ordered)
 
 if st.session_state.progress >= total_images:
     st.success("You have completed the study! Thank you for participating.")
     st.stop()
 
-row = data_shuffled.iloc[st.session_state.progress]
+row = data_ordered.iloc[st.session_state.progress]
 
 if st.session_state.current_step == 0:
     # Step 1: Show image and context
@@ -37,6 +37,7 @@ if st.session_state.current_step == 0:
     st.image(
         row["image_url"],
         caption=f"Image {st.session_state.progress + 1}",
+        use_column_width=True  # Ensures the image fits the column width
     )
     st.write(f"**Article Title:** {re.sub('_', ' ', row['article_title'])}")
     st.write(f"**Context:** {row['context']}")
