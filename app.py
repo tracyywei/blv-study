@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import random
-import time
 import re
 
 st.set_page_config(layout="wide")
@@ -20,10 +19,8 @@ if "current_step" not in st.session_state:
     st.session_state.current_step = 0  # Tracks whether the user is viewing the image/context or rating alt texts
 if "progress" not in st.session_state:
     st.session_state.progress = 0  # Tracks the current image index
-if "alt_text_index" not in st.session_state:
-    st.session_state.alt_text_index = 0  # Tracks which alt text is being rated
 
-total_images = len(data_ordered)
+total_images = 6
 
 if st.session_state.progress >= total_images:
     st.success("You have completed the study! Thank you for participating.")
@@ -40,13 +37,15 @@ if st.session_state.current_step == 0:
         use_column_width=True  # Ensures the image fits the column width
     )
     st.write(f"**Article Title:** {re.sub('_', ' ', row['article_title'])}")
-    st.write(f"**Context:** {row['context']}")
-    if st.button("Next", key="next_image", help="Go to the alt-text rating step"):
-        st.session_state.current_step = 1  # Move to alt-text rating
-        st.session_state.alt_text_index = 0  # Reset alt text index
+    # Clean the context by removing footnotes (e.g., [19])
+    cleaned_context = re.sub(r"\[\d+\]", "", row["context"])
+    st.write(f"**Context:** {cleaned_context}")
+    if st.button("Next", key="next_image", help="Go to the alt-text comparison step"):
+        st.session_state.current_step = 1  # Move to alt-text comparison
         st.rerun()
+
 elif st.session_state.current_step == 1:
-    # Step 2: Show alt-text options
+    # Step 2: Show both alt texts side by side
     alt_text_variants = {
         "yes_crt_yes_cnxt": row["yes_crt_yes_cnxt"],
         "other_alttext": row["other_alttext"]
@@ -54,30 +53,17 @@ elif st.session_state.current_step == 1:
     shuffled_variants = list(alt_text_variants.items())
     random.shuffle(shuffled_variants)
 
-    if st.session_state.alt_text_index < len(shuffled_variants):
-        # Show individual alt text
-        alt_text_key, alt_text_value = shuffled_variants[st.session_state.alt_text_index]
-        st.subheader(f"Alt Text {st.session_state.alt_text_index + 1} of {len(shuffled_variants)}")
-        st.write(f"{re.sub('Alt text: ', '', alt_text_value)}")
+    col1, col2 = st.columns(2)
 
-        if st.button("Next Alt Text", key=f"next_alt_text_{st.session_state.alt_text_index}"):
-            st.session_state.alt_text_index += 1
-            st.rerun()
-    elif st.session_state.alt_text_index == len(shuffled_variants):
-        # Show both alt texts side by side
-        st.subheader("Compare Alt Texts")
-        col1, col2 = st.columns(2)
+    with col1:
+        st.write("**Alt Text 1**")
+        st.write(f"{re.sub('Alt text: ', '', shuffled_variants[0][1])}")
 
-        with col1:
-            st.write("**Alt Text 1**")
-            st.write(f"{re.sub('Alt text: ', '', shuffled_variants[0][1])}")
+    with col2:
+        st.write("**Alt Text 2**")
+        st.write(f"{re.sub('Alt text: ', '', shuffled_variants[1][1])}")
 
-        with col2:
-            st.write("**Alt Text 2**")
-            st.write(f"{re.sub('Alt text: ', '', shuffled_variants[1][1])}")
-
-        if st.button("Next Image", key="next_image_after_comparison"):
-            st.session_state.progress += 1
-            st.session_state.current_step = 0  # Reset to image/context step
-            st.session_state.alt_text_index = 0  # Reset alt text index
-            st.rerun()
+    if st.button("Next Image", key="next_image_after_comparison"):
+        st.session_state.progress += 1
+        st.session_state.current_step = 0  # Reset to image/context step
+        st.rerun()
