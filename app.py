@@ -13,10 +13,9 @@ def load_data():
 
 data = load_data()
 
-st.title("Alt-Text BLV Study")
-
 random.seed(time.time())
-data_shuffled = data.sample(frac=1, random_state=42).reset_index(drop=True)
+data_sampled = data.sample(n=6, random_state=42).reset_index(drop=True)
+data_shuffled = data_sampled.sample(frac=1).reset_index(drop=True)  # Shuffle the selected 6 images
 
 if "current_step" not in st.session_state:
     st.session_state.current_step = 0  # Tracks whether the user is viewing the image/context or rating alt texts
@@ -45,9 +44,9 @@ if st.session_state.current_step == 0:
     if st.button("Next", key="next_image", help="Go to the alt-text rating step"):
         st.session_state.current_step = 1  # Move to alt-text rating
         st.session_state.alt_text_index = 0  # Reset alt text index
-        st.experimental_rerun()
+        st.rerun()
 elif st.session_state.current_step == 1:
-    # Step 2: Rate alt-text options
+    # Step 2: Show alt-text options
     alt_text_variants = {
         "yes_crt_yes_cnxt": row["yes_crt_yes_cnxt"],
         "other_alttext": row["other_alttext"]
@@ -56,50 +55,29 @@ elif st.session_state.current_step == 1:
     random.shuffle(shuffled_variants)
 
     if st.session_state.alt_text_index < len(shuffled_variants):
+        # Show individual alt text
         alt_text_key, alt_text_value = shuffled_variants[st.session_state.alt_text_index]
         st.subheader(f"Alt Text {st.session_state.alt_text_index + 1} of {len(shuffled_variants)}")
         st.write(f"{re.sub('Alt text: ', '', alt_text_value)}")
 
-        # Rating scales using dropdowns
-        quality = st.selectbox(
-            "Rate the quality of this description (1-Low, 5-High):",
-            options=[1, 2, 3, 4, 5],
-            key=f"quality_{st.session_state.alt_text_index}"
-        )
-        imaginability = st.selectbox(
-            "Rate how easy it is to imagine the image from this description (1-Low, 5-High):",
-            options=[1, 2, 3, 4, 5],
-            key=f"imaginability_{st.session_state.alt_text_index}"
-        )
-        relevance = st.selectbox(
-            "Rate the relevance of this description to the image (1-Low, 5-High):",
-            options=[1, 2, 3, 4, 5],
-            key=f"relevance_{st.session_state.alt_text_index}"
-        )
-        plausibility = st.selectbox(
-            "Rate the plausibility of this description (1-Low, 5-High):",
-            options=[1, 2, 3, 4, 5],
-            key=f"plausibility_{st.session_state.alt_text_index}"
-        )
-
         if st.button("Next Alt Text", key=f"next_alt_text_{st.session_state.alt_text_index}"):
-            # Save the ratings (replace with your actual saving logic)
-            # Example:
-            # sheet.append_row([
-            #     st.session_state.progress + 1,
-            #     row["image_name"],
-            #     alt_text_key,
-            #     quality,
-            #     imaginability,
-            #     relevance,
-            #     plausibility,
-            #     time.time()
-            # ])
             st.session_state.alt_text_index += 1
-            st.experimental_rerun()
-    else:
-        # All alt texts rated, move to the next image
-        if st.button("Next Image", key="next_image_after_ratings"):
+            st.rerun()
+    elif st.session_state.alt_text_index == len(shuffled_variants):
+        # Show both alt texts side by side
+        st.subheader("Compare Alt Texts")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write("**Alt Text 1**")
+            st.write(f"{re.sub('Alt text: ', '', shuffled_variants[0][1])}")
+
+        with col2:
+            st.write("**Alt Text 2**")
+            st.write(f"{re.sub('Alt text: ', '', shuffled_variants[1][1])}")
+
+        if st.button("Next Image", key="next_image_after_comparison"):
             st.session_state.progress += 1
             st.session_state.current_step = 0  # Reset to image/context step
-            st.experimental_rerun()
+            st.session_state.alt_text_index = 0  # Reset alt text index
+            st.rerun()
