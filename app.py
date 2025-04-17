@@ -14,8 +14,7 @@ def load_data():
 data = load_data()
 
 random.seed(time.time())
-data_sampled = data.sample(n=6, random_state=42).reset_index(drop=True)
-data_shuffled = data_sampled.sample(frac=1).reset_index(drop=True)  # Shuffle the selected 6 images
+data_shuffled = data.sample(frac=1).reset_index(drop=True)  # Shuffle the selected 6 images
 
 if "current_step" not in st.session_state:
     st.session_state.current_step = 0  # Tracks whether the user is viewing the image/context or rating alt texts
