@@ -7,7 +7,7 @@ st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("blv-study-alttext-data.csv")
+    df = pd.read_csv("alttext.csv")
     return df
 
 data = load_data()
@@ -46,22 +46,15 @@ if st.session_state.current_step == 0:
 
 elif st.session_state.current_step == 1:
     # Step 2: Show both alt texts side by side
-    alt_text_variants = {
-        "yes_crt_yes_cnxt": row["yes_crt_yes_cnxt"],
-        "other_alttext": row["other_alttext"]
-    }
-    shuffled_variants = list(alt_text_variants.items())
-    random.shuffle(shuffled_variants)
-
     col1, col2 = st.columns(2)
 
     with col1:
         st.write("**Alt Text 1**")
-        st.write(f"{re.sub('Alt text: ', '', shuffled_variants[0][1])}")
+        st.write(f"{re.sub('Alt text: ', '', row['alttext_1'])}")
 
     with col2:
         st.write("**Alt Text 2**")
-        st.write(f"{re.sub('Alt text: ', '', shuffled_variants[1][1])}")
+        st.write(f"{re.sub('Alt text: ', '',  row['alttext_2'])}")
 
     if st.button("Next Image", key="next_image_after_comparison"):
         st.session_state.progress += 1
