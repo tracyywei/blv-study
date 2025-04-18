@@ -34,7 +34,6 @@ if st.session_state.current_step == 0:
     st.image(
         row["image_url"],
         caption=f"Image {st.session_state.progress + 1}",
-        use_column_width=True  # Ensures the image fits the column width
     )
     st.write(f"**Article Title:** {re.sub('_', ' ', row['article_title'])}")
     # Clean the context by removing footnotes (e.g., [19])
